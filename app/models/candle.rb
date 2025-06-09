@@ -1,0 +1,2 @@
+class Candle < ApplicationRecord
+end
