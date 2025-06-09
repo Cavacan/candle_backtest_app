@@ -1,0 +1,4 @@
+<h2>ローソク足チャート</h2>
+<%= line_chart @candles.map { |c| [c.date, c.close] } %>
+
+<%= link_to 'home', root_path %> | <%= link_to 'csv load', candles_path %>

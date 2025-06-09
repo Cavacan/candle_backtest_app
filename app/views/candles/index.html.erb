@@ -1,0 +1,13 @@
+<h2>CSV load</h2>
+
+<%= form_with url: import_csv_candles_path, local: true, multipart: true do |f| %>
+  <%= f.file_field :csv_file %>
+  <%= f.submit 'Load' %>
+<% end %>
+
+<h2>年別統計</h2>
+<% @yearly_stats.each do |stat| %>
+  <p><%= stat[:period] %></p> | 高値: <%= stat[:high] %> 安値: <%= stat[:low] %> 高安平均: <%= stat[:range_avg] %> 実体平均: <%= stat[:body_avg] %> 出来高平均: <%= stat[:volume_avg] %></p>
+<% end %>
+
+<%= link_to "チャート表示", chart_candles_path %>
