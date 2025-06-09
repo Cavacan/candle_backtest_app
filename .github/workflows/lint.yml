@@ -19,9 +19,10 @@ jobs:
         uses: ruby/setup-ruby@v1
         with: 
           ruby-version: '3.3.1'
-          bundler-cash: true
+          bundler-cache: true
+
+      - name: Install dependencies
+        run: bundle install
 
       - name: Run RuboCop
-        run: |
-          bundle install
-          bin/rubocop --parallel
+        run: bin/rubocop --parallel
