@@ -6,7 +6,7 @@ class CandlesController < ApplicationController
       analyze_group(year, records)
     end.compact
 
-    @monthly_stats = Candle.where.not(date: nil).group_by_month(:date).map do | month, records|
+    @monthly_stats = Candle.where.not(date: nil).group_by_month(:date).map do |month, records|
       analyze_group(month, records)
     end
   end
@@ -24,26 +24,39 @@ class CandlesController < ApplicationController
     @candles = Candle.order(:date).last(100)
   end
 
-  private 
+  private
 
   def analyze_group(key, records)
-    return nil if records.blank? 
+    return nil if records.blank?
 
-    highs = records.map(&:high)
-    lows = records.map(&:low)
+    highs, lows, volumes = extract_highs_lows_volumes(records)
     ranges = highs.zip(lows).map { |h, l| h - l }
     bodies = records.map { |r| (r.close - r.open).abs }
 
-    {
-      period: key,
-      high: highs.max,
-      low: lows.min,
-      range_avg: ranges.sum / ranges.size,
-      body_avg: bodies.sum / bodies.size,
-      volume_avg: records.map(&:volume).sum / records.size
+    stats = {
+      highs: highs,
+      lows: lows,
+      ranges: ranges,
+      bodies: bodies,
+      volumes: volumes
     }
+
+    build_stat_hash(key, stats)
   end
-  
+
+  def extract_highs_lows_volumes(records)
+    highs = records.map(&:high)
+    lows  = records.map(&:low)
+    volumes = records.map(&:volume)
+    [highs, lows, volumes]
+  end
+
+  def average(arr)
+    return 0 if arr.blank?
+
+    arr.sum.to_f / arr.size
+  end
+
   def candle_data(row)
     {
       date: parse_date(row['date']),
@@ -57,11 +70,28 @@ class CandlesController < ApplicationController
 
   def parse_date(value)
     return nil if value.blank?
-    Date.parse(value.to_s) rescue nil
+
+    begin
+      Date.parse(value.to_s)
+    rescue StandardError
+      nil
+    end
   end
-  
+
   def parse_number(value)
     return nil if value.blank?
+
     value.to_s.delete(",").to_f
+  end
+
+  def build_stat_hash(key, stats)
+    {
+      period: key,
+      high: stats[:highs].max,
+      low: stats[:lows].min,
+      range_avg: average(stats[:ranges]),
+      body_avg: average(stats[:bodies]),
+      volume_avg: average(stats[:volumes])
+    }
   end
 end
